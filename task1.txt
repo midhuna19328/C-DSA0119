@@ -1,0 +1,45 @@
+#include <iostream>
+using namespace std;
+
+class SmartCard
+{
+private:
+    int balance;
+
+public:
+    SmartCard()
+    {
+        balance = 100;
+    }
+
+    void recharge(int amount)
+    {
+        if (amount > 0)
+        {
+            balance = balance + amount;
+            cout << "Recharge successful" << endl;
+        }
+        else
+        {
+            cout << "Invalid recharge amount" << endl;
+        }
+    }
+
+    void displayBalance()
+    {
+        cout << "Current Balance: Rs. " << balance << endl;
+    }
+};
+
+int main()
+{
+    SmartCard card;
+
+    card.displayBalance();
+
+    card.recharge(50);
+
+    card.displayBalance();
+
+    return 0;
+}

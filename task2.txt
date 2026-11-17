@@ -1,0 +1,16 @@
+#include <iostream>
+using namespace std;
+
+int main()
+{
+    const int INNER = 1000;
+    const int MIDDLE = 2000;
+    const int OUTER = 3000;
+
+    cout << "Inner Fare: Rs " << INNER / 100 << endl;
+    cout << "Middle Fare: Rs " << MIDDLE / 100 << endl;
+    cout << "Outer Fare: Rs " << OUTER / 100 << endl;
+
+    return 0;
+}
+

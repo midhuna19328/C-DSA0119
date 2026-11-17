@@ -1,0 +1,20 @@
+#include <iostream>
+using namespace std;
+
+int main()
+{
+    int fare = 20;
+    float price = 10.5;
+    double balance = 150.75;
+    char zone = 'A';
+    bool status = true;
+
+    cout << "Fare: " << fare << endl;
+    cout << "Price: " << price << endl;
+    cout << "Balance: " << balance << endl;
+    cout << "Zone: " << zone << endl;
+    cout << "Status: " << status << endl;
+
+    return 0;
+}
+

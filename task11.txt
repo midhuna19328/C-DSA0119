@@ -1,0 +1,20 @@
+#include <iostream>
+using namespace std;
+
+int main()
+{
+    long long journeys;
+    long long fare = 2000;
+    long long total;
+
+    cout << "Enter Number of Journeys: ";
+    cin >> journeys;
+
+    total = journeys * fare;
+
+    cout << "Total Amount: Rs "
+         << total / 100 << endl;
+
+    return 0;
+}
+

@@ -1,0 +1,38 @@
+#include <iostream>
+using namespace std;
+
+class Metro
+{
+public:
+    int calculateFare(int zone)
+    {
+        if (zone == 1)
+            return 1000;
+        else if (zone == 2)
+            return 2000;
+        else if (zone == 3)
+            return 3000;
+        else
+            return -1;
+    }
+};
+
+int main()
+{
+    Metro m;
+
+    int zone;
+
+    cout << "Enter Zone: ";
+    cin >> zone;
+
+    int fare = m.calculateFare(zone);
+
+    if (fare == -1)
+        cout << "Invalid Zone";
+    else
+        cout << "Fare: Rs " << fare / 100;
+
+    return 0;
+}
+
