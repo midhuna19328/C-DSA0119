@@ -1,0 +1,52 @@
+#include <iostream>
+using namespace std;
+
+struct Parcel
+{
+    double weight;
+    bool express;
+    bool insured;
+};
+
+// Weight in grams
+double charge(int grams)
+{
+    return grams * 0.05;
+}
+
+// Weight in kg with default arguments
+double charge(double weight,
+              bool express = false,
+              bool insured = false)
+{
+    double total = weight * 50;
+
+    if (express)
+        total += 30;
+
+    if (insured)
+        total += 20;
+
+    return total;
+}
+
+// Parcel object
+double charge(Parcel p)
+{
+    return charge(p.weight, p.express, p.insured);
+}
+
+int main()
+{
+    cout << "Charge 1: " << charge(200) << endl;
+    cout << "Charge 2: " << charge(2.0) << endl;
+    cout << "Charge 3: " << charge(2.0f) << endl;
+    cout << "Charge 4: " << charge(3.0, true) << endl;
+    cout << "Charge 5: " << charge(4.0, false, true) << endl;
+
+    Parcel p = {5.0, true, true};
+
+    cout << "Charge 6: " << charge(p) << endl;
+
+    return 0;
+}

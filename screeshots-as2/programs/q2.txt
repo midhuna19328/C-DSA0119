@@ -1,0 +1,46 @@
+#include <iostream>
+using namespace std;
+
+int& highestMark(int marks[], int n)
+{
+    int index = 0;
+
+    for (int i = 1; i < n; i++)
+    {
+        if (marks[i] > marks[index])
+            index = i;
+    }
+
+    return marks[index];
+}
+
+// Returning a local variable is unsafe.
+// int& dangerous()
+// {
+//     int x = 10;
+//     return x;
+// }
+
+int main()
+{
+    int marks[] = {75, 89, 92, 80, 85};
+    int n = 5;
+
+    cout << "Highest mark: " << highestMark(marks, n) << endl;
+
+    highestMark(marks, n) += 2;
+
+    cout << "After moderation: "
+         << highestMark(marks, n) << endl;
+
+    // Returning a copy
+    int copy = highestMark(marks, n);
+
+    // Returning a const reference
+    const int& ref = highestMark(marks, n);
+
+    cout << "Copy: " << copy << endl;
+    cout << "Const reference: " << ref << endl;
+
+    return 0;
+}

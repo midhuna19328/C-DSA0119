@@ -1,0 +1,89 @@
+#include <iostream>
+using namespace std;
+
+class SavingsAccount
+{
+private:
+    int accountNumber;
+    double balance;
+    double transactions[10];
+    int count;
+
+public:
+    SavingsAccount(int acc, double bal)
+    {
+        accountNumber = acc;
+        balance = bal;
+        count = 0;
+    }
+
+    void deposit(double amount);
+    void withdraw(double amount);
+    void miniStatement();
+};
+
+void SavingsAccount::deposit(double amount)
+{
+    if (amount <= 0)
+        return;
+
+    balance += amount;
+
+    if (count == 10)
+    {
+        for (int i = 0; i < 9; i++)
+            transactions[i] = transactions[i + 1];
+
+        count--;
+    }
+
+    transactions[count++] = amount;
+}
+
+void SavingsAccount::withdraw(double amount)
+{
+    if (amount <= 0 || amount > balance)
+        return;
+
+    balance -= amount;
+
+    if (count == 10)
+    {
+        for (int i = 0; i < 9; i++)
+            transactions[i] = transactions[i + 1];
+
+        count--;
+    }
+
+    transactions[count++] = -amount;
+}
+
+void SavingsAccount::miniStatement()
+{
+    cout << "\nAccount Number: "
+         << accountNumber << endl;
+
+    cout << "Balance: " << balance << endl;
+
+    cout << "\nLast Transactions:\n";
+
+    for (int i = 0; i < count; i++)
+    {
+        cout << transactions[i] << endl;
+    }
+}
+
+int main()
+{
+    SavingsAccount acc(1001, 5000);
+
+    acc.deposit(1000);
+    acc.withdraw(500);
+    acc.deposit(2000);
+    acc.withdraw(300);
+    acc.deposit(1500);
+
+    acc.miniStatement();
+
+    return 0;
+}
