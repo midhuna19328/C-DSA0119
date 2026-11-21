@@ -1,0 +1,219 @@
+#include <iostream>
+#include <string>
+using namespace std;
+// Abstract Base Class
+class Vehicle {
+protected:
+string regNo;
+double dailyRate;
+bool rented;
+public:
+Vehicle(string r, double d) {
+regNo = r;
+dailyRate = d;
+rented = false;
+}
+virtual double rentalCharge(int days) const = 0;
+virtual string type() const {
+
+return "Vehicle";
+}
+bool isRented() const {
+return rented;
+}
+void rent() {
+rented = true;
+}
+void returned() {
+rented = false;
+}
+string getRegNo() const {
+return regNo;
+}
+virtual void display() const {
+cout << type() << " | " << regNo
+<< " | Rate: " << dailyRate
+<< " | " << (rented ? "Rented" : "Available")
+<< endl;
+}
+virtual ~Vehicle() {}
+};
+// Intermediate Base Class
+class MotorVehicle : public Vehicle {
+protected:
+double fuelOrChargeLevel;
+string serviceDueDate;
+
+public:
+MotorVehicle(string r, double d, double level,
+string date)
+: Vehicle(r, d) {
+fuelOrChargeLevel = level;
+serviceDueDate = date;
+}
+};
+// Bicycle
+class Bicycle : public Vehicle {
+public:
+Bicycle(string r, double d) : Vehicle(r, d) {}
+string type() const override {
+return "Bicycle";
+}
+double rentalCharge(int days) const override {
+return dailyRate * days;
+}
+};
+// Two Wheeler
+class TwoWheeler : public MotorVehicle {
+public:
+TwoWheeler(string r, double d, double level,
+string date)
+: MotorVehicle(r, d, level, date) {}
+string type() const override {
+return "Two Wheeler";
+
+}
+double rentalCharge(int days) const override {
+return dailyRate * days + 2 * days * 105;
+}
+};
+// Car
+class Car : public MotorVehicle {
+protected:
+int seatingCapacity;
+public:
+Car(string r, double d, double level,
+string date, int seats)
+: MotorVehicle(r, d, level, date) {
+seatingCapacity = seats;
+}
+string type() const override {
+return "Car";
+}
+double rentalCharge(int days) const override {
+return dailyRate * days + 150 * days;
+}
+};
+// Electric Car
+class ElectricCar : public Car {
+private:
+double batteryCapacity;
+double kwhPerDay;
+
+double ratePerKwh;
+public:
+ElectricCar(string r, double d, double level,
+string date, int seats,
+double battery, double usage,
+double rate)
+: Car(r, d, level, date, seats) {
+batteryCapacity = battery;
+kwhPerDay = usage;
+ratePerKwh = rate;
+}
+string type() const override {
+return "Electric Car";
+}
+double rentalCharge(int days) const override {
+return dailyRate * days +
+kwhPerDay * days * ratePerKwh;
+}
+};
+// Fleet Management
+class Fleet {
+private:
+Vehicle* vehicles[100];
+int count;
+public:
+Fleet() {
+count = 0;
+
+}
+void addVehicle(Vehicle* v) {
+if (count < 100) {
+vehicles[count++] = v;
+cout << v->type() << " added successfully\n";
+}
+}
+void rentVehicle(string reg) {
+for (int i = 0; i < count; i++) {
+if (vehicles[i]->getRegNo() == reg) {
+if (!vehicles[i]->isRented()) {
+vehicles[i]->rent();
+cout << reg << " rented successfully\n";
+} else {
+cout << "Already rented\n";
+}
+return;
+}
+}
+cout << "Vehicle not found\n";
+}
+void returnVehicle(string reg, int days, int lateDays) {
+for (int i = 0; i < count; i++) {
+if (vehicles[i]->getRegNo() == reg &&
+vehicles[i]->isRented()) {
+double charge =
+vehicles[i]->rentalCharge(days);
+
+double lateCharge = lateDays * 200;
+cout << "\nRental Charge: " << charge;
+cout << "\nLate Charge: " << lateCharge;
+cout << "\nTotal Amount: "
+<< charge + lateCharge << endl;
+vehicles[i]->returned();
+return;
+}
+}
+cout << "Invalid return\n";
+}
+void listVehicles() const {
+cout << "\n--- VEHICLE FLEET ---\n";
+for (int i = 0; i < count; i++) {
+vehicles[i]->display();
+}
+}
+~Fleet() {
+for (int i = 0; i < count; i++) {
+delete vehicles[i];
+}
+}
+};
+// Main Function
+int main() {
+Fleet fleet;
+// Adding different vehicles
+
+fleet.addVehicle(new Bicycle("B101", 100));
+fleet.addVehicle(new TwoWheeler(
+"T101", 300, 80, "2026-12-10"));
+fleet.addVehicle(new Car(
+"C101", 1000, 70, "2026-12-15", 5));
+fleet.addVehicle(new ElectricCar(
+"E101", 1500, 90, "2026-12-20",
+5, 60, 10, 8));
+// Renting all vehicles
+cout << "\n--- RENTING VEHICLES ---\n";
+fleet.rentVehicle("B101");
+fleet.rentVehicle("T101");
+fleet.rentVehicle("C101");
+fleet.rentVehicle("E101");
+// Returning vehicles
+cout << "\n--- RETURNING VEHICLES ---\n";
+fleet.returnVehicle("B101", 2, 0);
+fleet.returnVehicle("T101", 2, 0);
+fleet.returnVehicle("C101", 2, 0);
+// Electric car returned late
+fleet.returnVehicle("E101", 2, 2);
+// Adding a new vehicle type
+cout << "\n--- ADDING NEW VEHICLE TYPE ---\n";
+fleet.addVehicle(new ElectricBus(
+"EB101", 3000, 85, "2027-01-10",
+120, 200, 30, 8));
+fleet.rentVehicle("EB101");
+
+fleet.returnVehicle("EB101", 2, 1);
+// Display all vehicles
+fleet.listVehicles();
+return 0;
+}
