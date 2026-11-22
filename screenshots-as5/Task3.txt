@@ -1,0 +1,100 @@
+
+#include <iostream>
+#include <algorithm>
+using namespace std;
+
+// Bill class
+class Bill {
+public:
+    double amount;
+
+    Bill(double a) {
+        amount = a;
+    }
+
+    double total() const {
+        return amount;
+    }
+};
+
+// Abstract Payer class
+class Payer {
+public:
+    virtual double amountCovered(const Bill& b) const = 0;
+
+    virtual ~Payer() {}
+};
+
+// SelfPay class
+class SelfPay : public Payer {
+public:
+    double amountCovered(const Bill& b) const override {
+        return b.total();
+    }
+};
+
+// Insurance class
+class Insurance : public Payer {
+    double coverLimit;
+    double coPayment;
+
+public:
+    Insurance(double limit, double co)
+        : coverLimit(limit), coPayment(co) {}
+
+    double amountCovered(const Bill& b) const override {
+        double eligible = b.total() * (100 - coPayment) / 100;
+        return min(eligible, coverLimit);
+    }
+};
+
+// Government Scheme class
+class GovernmentScheme : public Payer {
+    double packageRate;
+
+public:
+    GovernmentScheme(double rate) : packageRate(rate) {}
+
+    double amountCovered(const Bill& b) const override {
+        return min(b.total(), packageRate);
+    }
+};
+
+// New payer added without modifying existing classes
+class CorporateTieUp : public Payer {
+    double discount;
+
+public:
+    CorporateTieUp(double d) : discount(d) {}
+
+    double amountCovered(const Bill& b) const override {
+        return b.total() * discount / 100;
+    }
+};
+
+int main() {
+    Bill b(10000);
+
+    SelfPay s;
+    Insurance i(8000, 20);
+    GovernmentScheme g(6000);
+    CorporateTieUp c(15);
+
+    Payer* payers[] = {&s, &i, &g, &c};
+
+    cout << "Bill Amount: " << b.total() << endl;
+
+    cout << "Self Pay: "
+         << payers[0]->amountCovered(b) << endl;
+
+    cout << "Insurance: "
+         << payers[1]->amountCovered(b) << endl;
+
+    cout << "Government Scheme: "
+         << payers[2]->amountCovered(b) << endl;
+
+    cout << "Corporate Tie-Up: "
+         << payers[3]->amountCovered(b) << endl;
+
+    return 0;
+}

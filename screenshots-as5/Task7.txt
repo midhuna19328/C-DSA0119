@@ -1,0 +1,99 @@
+
+#include <iostream>
+#include <stdexcept>
+#include <string>
+#include <memory>
+using namespace std;
+
+class ClaimError : public runtime_error {
+public:
+    using runtime_error::runtime_error;
+};
+
+class Resource {
+public:
+    Resource() {
+        cout << "Object created\n";
+    }
+
+    ~Resource() {
+        cout << "Object destroyed\n";
+    }
+};
+
+void testNegative() {
+    throw invalid_argument("negative charges");
+}
+
+void testClaim(double billed, double cover) {
+    if (billed > cover)
+        throw ClaimError("exceeds cover");
+}
+
+void testPackage(string code) {
+    if (code != "P001")
+        throw runtime_error("unknown package code");
+}
+
+void testNumber() {
+    stod("abc");
+}
+
+void testMemory() {
+    try {
+        throw bad_alloc();
+    }
+    catch (const bad_alloc&) {
+        cout << "Memory allocation failed\n";
+    }
+}
+
+int main() {
+    Resource r;
+
+    try {
+        testNegative();
+    }
+    catch (const exception& e) {
+        cout << "Error: " << e.what() << '\n';
+    }
+
+    try {
+        testClaim(60000, 50000);
+    }
+    catch (const ClaimError& e) {
+        cout << "Claim Error: " << e.what() << '\n';
+    }
+
+    try {
+        testPackage("P999");
+    }
+    catch (const exception& e) {
+        cout << "Package Error: " << e.what() << '\n';
+    }
+
+    try {
+        testNumber();
+    }
+    catch (const invalid_argument& e) {
+        cout << "Invalid Number: " << e.what() << '\n';
+    }
+
+    try {
+        testMemory();
+    }
+    catch (const bad_alloc& e) {
+        cout << "Memory allocation failed\n";
+    }
+
+    try {
+        throw 10;
+    }
+    catch (...) {
+        cout << "Unknown exception caught\n";
+    }
+
+    cout << "Program continues running\n";
+
+    return 0;
+}

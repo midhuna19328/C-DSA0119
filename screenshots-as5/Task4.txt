@@ -1,0 +1,142 @@
+#include <iostream>
+#include <exception>
+#include <new>
+#include <string>
+using namespace std;
+
+// Base exception class
+class BillingError : public exception {
+public:
+    const char* what() const noexcept override {
+        return "Billing Error";
+    }
+};
+
+// Custom exception classes
+class NegativeChargeError : public BillingError {
+public:
+    const char* what() const noexcept override {
+        return "Negative charges are not allowed";
+    }
+};
+
+class ClaimError : public BillingError {
+public:
+    const char* what() const noexcept override {
+        return "Insurance claim error";
+    }
+};
+
+class ClaimAboveCoverError : public ClaimError {
+public:
+    const char* what() const noexcept override {
+        return "Claim exceeds insurance cover";
+    }
+};
+
+class UnknownPackageError : public BillingError {
+public:
+    const char* what() const noexcept override {
+        return "Unknown government package";
+    }
+};
+
+class PatientRecordError : public BillingError {
+public:
+    const char* what() const noexcept override {
+        return "Patient record not found";
+    }
+};
+
+// Bill class
+class Bill {
+private:
+    double amount;
+
+public:
+    Bill() noexcept : amount(0) {}
+
+    ~Bill() noexcept {
+        cout << "Bill object destroyed\n";
+    }
+
+    void addCharge(double value) {
+        if (value < 0)
+            throw NegativeChargeError();
+
+        amount += value;
+    }
+
+    double getAmount() const noexcept {
+        return amount;
+    }
+
+    void calculateClaim(double claim, double cover) {
+        if (claim > cover)
+            throw ClaimAboveCoverError();
+
+        cout << "Approved claim: " << claim << endl;
+    }
+
+    void selectPackage(int code) {
+        if (code != 101 && code != 102)
+            throw UnknownPackageError();
+
+        cout << "Package selected: " << code << endl;
+    }
+
+    void getPatientRecord(bool found) {
+        if (!found)
+            throw PatientRecordError();
+
+        cout << "Patient record found\n";
+    }
+};
+
+// Main function
+int main() {
+    try {
+        Bill b;
+
+        b.addCharge(500);
+        cout << "Bill Amount: " << b.getAmount() << endl;
+
+        b.addCharge(-100);
+
+        b.calculateClaim(5000, 3000);
+
+        b.selectPackage(999);
+
+        b.getPatientRecord(false);
+    }
+
+    catch (const NegativeChargeError& e) {
+        cout << e.what() << endl;
+    }
+
+    catch (const ClaimAboveCoverError& e) {
+        cout << e.what() << endl;
+    }
+
+    catch (const UnknownPackageError& e) {
+        cout << e.what() << endl;
+    }
+
+    catch (const PatientRecordError& e) {
+        cout << e.what() << endl;
+    }
+
+    catch (const bad_alloc& e) {
+        cout << "Memory allocation failed: " << e.what() << endl;
+    }
+
+    catch (const BillingError& e) {
+        cout << e.what() << endl;
+    }
+
+    catch (const exception& e) {
+        cout << "General error: " << e.what() << endl;
+    }
+
+    return 0;
+}

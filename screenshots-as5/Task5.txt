@@ -1,0 +1,65 @@
+
+#include <iostream>
+#include <string>
+#include <memory>
+using namespace std;
+
+struct Guard {
+    string n;
+
+    explicit Guard(const string& s) : n(s) {}
+
+    ~Guard() {
+        cout << '~' << n << ' ';
+    }
+};
+
+void f() {
+    Guard g("f");
+    throw 42;
+}
+
+void processBill() {
+    try {
+        throw runtime_error("Invalid bill amount");
+    }
+    catch (const exception& e) {
+        cout << "Logged: " << e.what() << endl;
+        throw;
+    }
+}
+
+int main() {
+    // Stack unwinding demonstration
+    try {
+        Guard m("main");
+        f();
+        cout << "not printed ";
+    }
+    catch (int x) {
+        cout << "caught " << x << endl;
+    }
+    catch (...) {
+        cout << "other" << endl;
+    }
+
+    // Catch and rethrow demonstration
+    try {
+        processBill();
+    }
+    catch (const exception& e) {
+        cout << "Final Error: " << e.what() << endl;
+    }
+
+    // RAII demonstration
+    try {
+        unique_ptr<int> p(new int(10));
+        cout << "Memory allocated: " << *p << endl;
+        throw 100;
+    }
+    catch (int x) {
+        cout << "RAII caught: " << x << endl;
+    }
+
+    return 0;
+}

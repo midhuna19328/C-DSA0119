@@ -1,0 +1,242 @@
+
+#include <iostream>
+#include <vector>
+#include <variant>
+#include <chrono>
+#include <stdexcept>
+#include <iomanip>
+#include <memory>
+using namespace std;
+using namespace chrono;
+
+struct Bill {
+    double a, b;
+    virtual double total() const = 0;
+    virtual ~Bill() = default;
+};
+
+struct OutPatientBill : Bill {
+    OutPatientBill(double x, double y) {
+        a = x; b = y;
+    }
+    double total() const override {
+        return a + b;
+    }
+};
+
+struct InPatientBill : Bill {
+    InPatientBill(double x, double y) {
+        a = x; b = y;
+    }
+    double total() const override {
+        return a + b;
+    }
+};
+
+struct SimpleBill {
+    int type;
+    double a, b;
+};
+
+using VariantBill = variant<OutPatientBill, InPatientBill>;
+
+double switchTotal(const SimpleBill& b) {
+    switch (b.type) {
+        case 1: return b.a + b.b;
+        case 2: return b.a + b.b;
+        default: return 0;
+    }
+}
+
+double variantTotal(const VariantBill& b) {
+    return visit([](const auto& x) {
+        return x.total();
+    }, b);
+}
+
+template<class F>
+double measure(F function) {
+    auto start = high_resolution_clock::now();
+
+    double result = function();
+
+    auto stop = high_resolution_clock::now();
+
+    double time = duration<double, milli>(stop-start).count();
+
+    // Prevent result from being unused.
+    if (result < 0)
+        cout << result;
+
+    return time;
+}
+
+// B3.3 Return code validation
+int validateReturn(double charge) {
+    return charge < 0 ? 1 : 0;
+}
+
+// B3.3 Exception validation
+void validateException(double charge) {
+    if (charge < 0)
+        throw invalid_argument("Invalid charge");
+}
+
+int main() {
+    cout << fixed << setprecision(3);
+
+    // B3.1: Correctness using 10 bills
+    vector<unique_ptr<Bill>> virtualBills;
+    vector<SimpleBill> simpleBills;
+
+    double data[10][3] = {
+        {1,500,200}, {2,1000,500},
+        {1,600,300}, {2,2000,800},
+        {1,400,100}, {2,1500,500},
+        {1,700,200}, {2,2500,1000},
+        {1,300,100}, {2,1200,400}
+    };
+
+    for (auto& d : data) {
+        if (d[0] == 1)
+            virtualBills.push_back(
+                make_unique<OutPatientBill>(d[1],d[2]));
+        else
+            virtualBills.push_back(
+                make_unique<InPatientBill>(d[1],d[2]));
+
+        simpleBills.push_back(
+            {(int)d[0],d[1],d[2]});
+    }
+
+    double vtotal = 0, stotal = 0;
+
+    for (const auto& b : virtualBills)
+        vtotal += b->total();
+
+    for (const auto& b : simpleBills)
+        stotal += switchTotal(b);
+
+    cout << "\nB3.1 CORRECTNESS\n";
+    cout << "Virtual Total = " << vtotal << endl;
+    cout << "Switch Total  = " << stotal << endl;
+    cout << (abs(vtotal-stotal) < 0.001
+             ? "Both results match\n"
+             : "Results do not match\n");
+
+    // B3.2: Performance comparison
+    cout << "\nB3.2 PERFORMANCE (milliseconds)\n";
+    cout << "Bills\tVirtual\tSwitch\tVariant\n";
+
+    for (int n : {1000, 1000000, 10000000}) {
+        vector<unique_ptr<Bill>> vb;
+        vector<SimpleBill> sb;
+        vector<VariantBill> varb;
+
+        vb.reserve(n);
+        sb.reserve(n);
+        varb.reserve(n);
+
+        for (int i = 0; i < n; i++) {
+            double x = 500 + (i % 100);
+            double y = 200 + (i % 50);
+
+            if (i % 2 == 0) {
+                vb.push_back(make_unique<OutPatientBill>(x,y));
+                sb.push_back({1,x,y});
+                varb.emplace_back(OutPatientBill{x,y});
+            } else {
+                vb.push_back(make_unique<InPatientBill>(x,y));
+                sb.push_back({2,x,y});
+                varb.emplace_back(InPatientBill{x,y});
+            }
+        }
+
+        volatile double sink = 0;
+
+        double tv = measure([&]() {
+            double sum = 0;
+            for (const auto& b : vb)
+                sum += b->total();
+            sink = sum;
+            return sum;
+        });
+
+        double ts = measure([&]() {
+            double sum = 0;
+            for (const auto& b : sb)
+                sum += switchTotal(b);
+            sink = sum;
+            return sum;
+        });
+
+        double tvar = measure([&]() {
+            double sum = 0;
+            for (const auto& b : varb)
+                sum += variantTotal(b);
+            sink = sum;
+            return sum;
+        });
+
+        cout << n << "\t" << tv << "\t"
+             << ts << "\t" << tvar << endl;
+    }
+
+    // B3.3: Exception vs return code
+    cout << "\nB3.3 EXCEPTION PERFORMANCE\n";
+    cout << "Invalid%\tReturn(ms)\tException(ms)\n";
+
+    const int N = 1000000;
+
+    for (int percent : {0, 1, 50}) {
+        vector<double> charges(N, 100);
+
+        int invalid = N * percent / 100;
+
+        for (int i = 0; i < invalid; i++)
+            charges[i] = -100;
+
+        int errors = 0;
+
+        double tr = measure([&]() {
+            errors = 0;
+            for (double x : charges)
+                errors += validateReturn(x);
+            return errors;
+        });
+
+        int exceptionErrors = 0;
+
+        double te = measure([&]() {
+            exceptionErrors = 0;
+            for (double x : charges) {
+                try {
+                    validateException(x);
+                }
+                catch (const invalid_argument&) {
+                    exceptionErrors++;
+                }
+            }
+            return exceptionErrors;
+        });
+
+        cout << percent << "%\t\t"
+             << tr << "\t\t" << te << endl;
+
+        if (errors != exceptionErrors)
+            cout << "Validation mismatch!\n";
+    }
+
+    // Variant memory size
+    cout << "\nVARIANT MEMORY SIZE\n";
+    cout << "OutPatientBill size = "
+         << sizeof(OutPatientBill) << " bytes\n";
+    cout << "InPatientBill size = "
+         << sizeof(InPatientBill) << " bytes\n";
+    cout << "Variant size = "
+         << sizeof(VariantBill) << " bytes\n";
+
+    cout << "\nB3 EXPERIMENT COMPLETED\n";
+
+    return 0;
+}

@@ -1,0 +1,193 @@
+
+#include <iostream>
+#include <vector>
+#include <memory>
+#include <stdexcept>
+#include <string>
+using namespace std;
+
+// Base Bill class
+class Bill {
+public:
+    virtual double total() const = 0;
+    virtual string type() const = 0;
+    virtual void print() const = 0;
+    virtual ~Bill() = default;
+};
+
+// Existing bill type
+class OutPatientBill : public Bill {
+    double consultation, medicine;
+
+public:
+    OutPatientBill(double c, double m)
+        : consultation(c), medicine(m) {
+        if (c < 0 || m < 0)
+            throw invalid_argument("Negative charge");
+    }
+
+    double total() const override {
+        return consultation + medicine;
+    }
+
+    string type() const override {
+        return "Outpatient";
+    }
+
+    void print() const override {
+        cout << type() << ": " << total() << endl;
+    }
+};
+
+// Existing bill type
+class InPatientBill : public Bill {
+    double room, treatment;
+
+public:
+    InPatientBill(double r, double t)
+        : room(r), treatment(t) {
+        if (r < 0 || t < 0)
+            throw invalid_argument("Negative charge");
+    }
+
+    double total() const override {
+        return room + treatment;
+    }
+
+    string type() const override {
+        return "Inpatient";
+    }
+
+    void print() const override {
+        cout << type() << ": " << total() << endl;
+    }
+};
+
+// NEW BILL TYPE - EmergencyBill
+class EmergencyBill : public Bill {
+    double emergency, medicine;
+
+public:
+    EmergencyBill(double e, double m)
+        : emergency(e), medicine(m) {
+        if (e < 0 || m < 0)
+            throw invalid_argument("Negative charge");
+    }
+
+    double total() const override {
+        return emergency + medicine;
+    }
+
+    string type() const override {
+        return "Emergency";
+    }
+
+    void print() const override {
+        cout << type() << ": " << total() << endl;
+    }
+};
+
+// Base Payer class
+class Payer {
+public:
+    virtual double amountCovered(const Bill& b) const = 0;
+    virtual ~Payer() = default;
+};
+
+// Existing payer
+class SelfPay : public Payer {
+public:
+    double amountCovered(const Bill&) const override {
+        return 0;
+    }
+};
+
+// Existing payer
+class Insurance : public Payer {
+    double limit;
+    double copay;
+
+public:
+    Insurance(double l, double c) : limit(l), copay(c) {
+        if (l < 0 || c < 0 || c > 100)
+            throw invalid_argument("Invalid insurance settings");
+    }
+
+    double amountCovered(const Bill& b) const override {
+        return min(limit, b.total() * (1 - copay / 100));
+    }
+};
+
+// Existing payer
+class GovernmentScheme : public Payer {
+    double fixedRate;
+
+public:
+    GovernmentScheme(double r) : fixedRate(r) {
+        if (r < 0)
+            throw invalid_argument("Invalid scheme rate");
+    }
+
+    double amountCovered(const Bill& b) const override {
+        return min(fixedRate, b.total());
+    }
+};
+
+// NEW PAYER - CorporatePayer
+class CorporatePayer : public Payer {
+public:
+    double amountCovered(const Bill& b) const override {
+        return b.total() * 0.80;
+    }
+};
+
+// Test program
+int main() {
+    try {
+        vector<unique_ptr<Bill>> bills;
+
+        bills.push_back(make_unique<OutPatientBill>(2000, 1000));
+        bills.push_back(make_unique<InPatientBill>(5000, 3000));
+        bills.push_back(make_unique<EmergencyBill>(5000, 2000));
+
+        SelfPay self;
+        Insurance insurance(10000, 20);
+        GovernmentScheme government(4000);
+        CorporatePayer corporate;
+
+        cout << "HOSPITAL BILLING SYSTEM\n\n";
+
+        for (const auto& b : bills) {
+            b->print();
+
+            cout << "Self Pay Coverage: "
+                 << self.amountCovered(*b) << endl;
+
+            cout << "Insurance Coverage: "
+                 << insurance.amountCovered(*b) << endl;
+
+            cout << "Government Coverage: "
+                 << government.amountCovered(*b) << endl;
+
+            cout << "Corporate Coverage: "
+                 << corporate.amountCovered(*b) << endl;
+
+            cout << "--------------------\n";
+        }
+
+        // Exception testing
+        try {
+            OutPatientBill invalid(-100, 500);
+        }
+        catch (const exception& e) {
+            cout << "Caught Exception: " << e.what() << endl;
+        }
+
+        cout << "\nAll tests completed successfully.\n";
+    }
+    catch (const exception& e) {
+        cerr << "Main Error: " << e.what() << endl;
+    }
+
+    return 0;
+}

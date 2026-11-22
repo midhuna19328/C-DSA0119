@@ -1,0 +1,107 @@
+
+#include <iostream>
+#include <vector>
+using namespace std;
+
+// Abstract Base Class
+class Bill {
+protected:
+    int billId;
+    double amount;
+
+public:
+    Bill(int id, double amt) {
+        billId = id;
+        amount = amt;
+    }
+
+    virtual double total() = 0;
+    virtual string type() = 0;
+    virtual void print() = 0;
+
+    virtual ~Bill() {}
+};
+
+// Derived Class 1
+class ElectricityBill : public Bill {
+public:
+    ElectricityBill(int id, double amt) : Bill(id, amt) {}
+
+    double total() override {
+        return amount + amount * 0.05;
+    }
+
+    string type() override {
+        return "Electricity Bill";
+    }
+
+    void print() override {
+        cout << billId << " " << type()
+             << " Total: " << total() << endl;
+    }
+};
+
+// Derived Class 2
+class WaterBill : public Bill {
+public:
+    WaterBill(int id, double amt) : Bill(id, amt) {}
+
+    double total() override {
+        return amount + amount * 0.02;
+    }
+
+    string type() override {
+        return "Water Bill";
+    }
+
+    void print() override {
+        cout << billId << " " << type()
+             << " Total: " << total() << endl;
+    }
+};
+
+// Derived Class 3
+class TelephoneBill : public Bill {
+public:
+    TelephoneBill(int id, double amt) : Bill(id, amt) {}
+
+    double total() override {
+        return amount + amount * 0.10;
+    }
+
+    string type() override {
+        return "Telephone Bill";
+    }
+
+    void print() override {
+        cout << billId << " " << type()
+             << " Total: " << total() << endl;
+    }
+};
+
+// Main Function
+int main() {
+    vector<Bill*> bills;
+
+    bills.push_back(new ElectricityBill(101, 1000));
+    bills.push_back(new WaterBill(102, 500));
+    bills.push_back(new TelephoneBill(103, 800));
+
+    double dailyTotal = 0;
+
+    cout << "BILL DETAILS\n";
+
+    for (Bill* b : bills) {
+        b->print();
+        dailyTotal += b->total();
+    }
+
+    cout << "\nDaily Total = " << dailyTotal << endl;
+
+    // Free allocated memory
+    for (Bill* b : bills) {
+        delete b;
+    }
+
+    return 0;
+}
